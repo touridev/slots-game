@@ -9,10 +9,12 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
+    "howler": "^2.2.4",
     "pixi-spine": "^4.0.4",
     "pixi.js": "^7.3.2"
   },
   "devDependencies": {
+    "@types/howler": "^2.2.12",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "copy-webpack-plugin": "^11.0.0",
