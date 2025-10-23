@@ -35,16 +35,20 @@ export class Reel {
     private addViewportClipping(): void {
         // Create a clipping rectangle to show only the visible reel area
         try {
-            const clipArea = new PIXI.Rectangle(0, 0, this.symbolSize * this.symbolCount, this.symbolSize);
-            this.symbolsContainer.hitArea = clipArea;
-            this.symbolsContainer.mask = new PIXI.Graphics()
-                .beginFill(0xFFFFFF)
-                .drawRect(0, 0, this.symbolSize * this.symbolCount, this.symbolSize)
-                .endFill();
-            this.container.addChild(this.symbolsContainer.mask);
+            const clipArea = new PIXI.Graphics();
+            clipArea.beginFill(0xFFFFFF);
+            clipArea.drawRect(0, 0, this.symbolSize * this.symbolCount, this.symbolSize);
+            clipArea.endFill();
+            
+            // Apply mask but DON'T add it as a child
+            // The mask will still work for clipping without being rendered
+            this.symbolsContainer.mask = clipArea;
+            
+            // Set hitArea for interaction
+            this.symbolsContainer.hitArea = new PIXI.Rectangle(0, 0, this.symbolSize * this.symbolCount, this.symbolSize);
         } catch (error) {
-            // Mask might fail in test environment, that's okay
-            console.debug('Could not create visual mask (expected in test environment)');
+            // Mask creation might fail in test environment, that's okay
+            console.debug('Could not create mask (expected in test environment)');
         }
     }
 
