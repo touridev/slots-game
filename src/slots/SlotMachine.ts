@@ -20,7 +20,7 @@ export class SlotMachine {
         this.container = new PIXI.Container();
         this.reels = [];
 
-        // Center the slot machine
+        // Center the slot machine vertically
         this.container.x = this.app.screen.width / 2 - ((REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL) / 2);
         this.container.y = this.app.screen.height / 2 - ((REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1)) / 2);
 
@@ -49,7 +49,7 @@ export class SlotMachine {
     }
 
     private createReels(): void {
-        // Create each reel
+        // Create each reel stacked vertically
         for (let i = 0; i < REEL_CONFIG.COUNT; i++) {
             const reel = new Reel(REEL_CONFIG.SYMBOLS_PER_REEL, REEL_CONFIG.SYMBOL_SIZE);
             reel.container.y = i * (REEL_CONFIG.SYMBOL_SIZE + REEL_CONFIG.REEL_SPACING);
