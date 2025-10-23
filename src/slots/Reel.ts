@@ -22,6 +22,9 @@ export class Reel {
         this.createSymbols();
         this.addViewportClipping();
         
+        // Initialize symbols to grid-aligned positions
+        this.updateSymbolPositions();
+        
         this.container.addChild(this.symbolsContainer);
     }
 
@@ -80,22 +83,8 @@ export class Reel {
             this.currentOffset -= this.speed * delta;
         }
 
-        // Update symbol positions with smooth wrapping
-        const totalWidth = this.symbolCount * this.symbolSize;
-        
-        for (let i = 0; i < this.symbols.length; i++) {
-            let x = i * this.symbolSize + this.currentOffset;
-            
-            // Smooth wrapping: keep position within visible range
-            // Use floor to find how many complete wraps have occurred
-            if (x < 0) {
-                x += Math.ceil(Math.abs(x) / totalWidth) * totalWidth;
-            } else if (x >= totalWidth) {
-                x -= Math.floor(x / totalWidth) * totalWidth;
-            }
-            
-            this.symbols[i].x = x;
-        }
+        // Update all symbol positions
+        this.updateSymbolPositions();
 
         // If we're stopping, slow down the reel
         if (!this.isSpinning && this.speed > 0) {
@@ -136,7 +125,16 @@ export class Reel {
             this.currentOffset = snappedPosition - (this.currentOffset - normalizedOffset);
         }
 
-        // Update all symbol positions with smooth wrapping
+        // Update all symbol positions
+        this.updateSymbolPositions();
+    }
+
+    /**
+     * Updates all symbol positions based on current offset
+     */
+    private updateSymbolPositions(): void {
+        const totalWidth = this.symbolCount * this.symbolSize;
+        
         for (let i = 0; i < this.symbols.length; i++) {
             let x = i * this.symbolSize + this.currentOffset;
             
