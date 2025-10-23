@@ -20,9 +20,12 @@ export class SlotMachine {
         this.container = new PIXI.Container();
         this.reels = [];
 
-        // Center the slot machine vertically
-        this.container.x = this.app.screen.width / 2 - ((REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL) / 2);
-        this.container.y = this.app.screen.height / 2 - ((REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1)) / 2);
+        // Calculate total width: 4 reels * 150px + 3 gaps * 10px = 630px
+        const totalReelsWidth = REEL_CONFIG.COUNT * REEL_CONFIG.SYMBOL_SIZE + (REEL_CONFIG.COUNT - 1) * REEL_CONFIG.REEL_SPACING;
+        
+        // Center horizontally and vertically in the viewport
+        this.container.x = this.app.screen.width / 2 - totalReelsWidth / 2;
+        this.container.y = this.app.screen.height / 2 - REEL_CONFIG.SYMBOL_SIZE / 2;
 
         this.createBackground();
 
@@ -35,11 +38,14 @@ export class SlotMachine {
         try {
             const background = new PIXI.Graphics();
             background.beginFill(0x000000, 0.5);
+            
+            const totalReelsWidth = REEL_CONFIG.COUNT * REEL_CONFIG.SYMBOL_SIZE + (REEL_CONFIG.COUNT - 1) * REEL_CONFIG.REEL_SPACING;
+            
             background.drawRect(
                 -20,
                 -20,
-                REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL + 40,
-                REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1) + 40
+                totalReelsWidth + 40,
+                REEL_CONFIG.SYMBOL_SIZE + 40
             );
             background.endFill();
             this.container.addChild(background);
@@ -49,10 +55,11 @@ export class SlotMachine {
     }
 
     private createReels(): void {
-        // Create each reel stacked vertically
+        // Create each reel positioned horizontally (side-by-side)
         for (let i = 0; i < REEL_CONFIG.COUNT; i++) {
             const reel = new Reel(REEL_CONFIG.SYMBOLS_PER_REEL, REEL_CONFIG.SYMBOL_SIZE);
-            reel.container.y = i * (REEL_CONFIG.SYMBOL_SIZE + REEL_CONFIG.REEL_SPACING);
+            reel.container.x = i * (REEL_CONFIG.SYMBOL_SIZE + REEL_CONFIG.REEL_SPACING);
+            reel.container.y = 0;
             this.container.addChild(reel.container);
             this.reels.push(reel);
         }
@@ -165,8 +172,9 @@ export class SlotMachine {
             if (frameSpineData) {
                 this.frameSpine = new Spine(frameSpineData.spineData);
 
-                this.frameSpine.y = (REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1)) / 2;
-                this.frameSpine.x = (REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL) / 2;
+                const totalReelsWidth = REEL_CONFIG.COUNT * REEL_CONFIG.SYMBOL_SIZE + (REEL_CONFIG.COUNT - 1) * REEL_CONFIG.REEL_SPACING;
+                this.frameSpine.x = totalReelsWidth / 2;
+                this.frameSpine.y = REEL_CONFIG.SYMBOL_SIZE / 2;
 
                 if (this.frameSpine.state.hasAnimation('idle')) {
                     this.frameSpine.state.setAnimation(0, 'idle', true);
@@ -179,8 +187,9 @@ export class SlotMachine {
             if (winSpineData) {
                 this.winAnimation = new Spine(winSpineData.spineData);
 
-                this.winAnimation.x = (REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1)) / 2;
-                this.winAnimation.y = (REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL) / 2;
+                const totalReelsWidth = REEL_CONFIG.COUNT * REEL_CONFIG.SYMBOL_SIZE + (REEL_CONFIG.COUNT - 1) * REEL_CONFIG.REEL_SPACING;
+                this.winAnimation.x = totalReelsWidth / 2;
+                this.winAnimation.y = REEL_CONFIG.SYMBOL_SIZE / 2;
 
                 this.winAnimation.visible = false;
 
