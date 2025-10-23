@@ -124,7 +124,17 @@ export class SlotMachine {
             if (this.winAnimation) {
                 // Play the win animation found in "big-boom-h" spine
                 this.winAnimation.visible = true;
-                this.winAnimation.state.setAnimation(0, 'animation', false);
+                
+                // Get available animations and play the first one, or a default if available
+                const animationName = this.winAnimation.state.hasAnimation('animation') 
+                    ? 'animation' 
+                    : this.getFirstAnimationName(this.winAnimation);
+                
+                if (animationName) {
+                    this.winAnimation.state.setAnimation(0, animationName, false);
+                } else {
+                    console.warn('No animations found in win animation spine');
+                }
                 
                 // Hide animation after it finishes
                 setTimeout(() => {
@@ -132,6 +142,17 @@ export class SlotMachine {
                 }, ANIMATION_CONFIG.WIN_ANIMATION_DURATION);
             }
         }
+    }
+
+    private getFirstAnimationName(spine: Spine): string | null {
+        try {
+            if (spine.spineData && spine.spineData.animations && spine.spineData.animations.length > 0) {
+                return spine.spineData.animations[0].name;
+            }
+        } catch (error) {
+            console.error('Error getting animation name:', error);
+        }
+        return null;
     }
 
     public setSpinButton(button: PIXI.Sprite): void {

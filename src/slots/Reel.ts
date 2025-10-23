@@ -52,17 +52,15 @@ export class Reel {
             this.currentOffset -= this.speed * delta;
         }
 
-        // Update symbol positions
+        // Update symbol positions with proper wrapping
+        const totalWidth = this.symbolCount * this.symbolSize;
+        
         for (let i = 0; i < this.symbols.length; i++) {
             let x = i * this.symbolSize + this.currentOffset;
             
-            // Wrap symbols around (tiling effect)
-            const totalWidth = this.symbolCount * this.symbolSize;
-            if (x < -this.symbolSize) {
-                x += totalWidth;
-            } else if (x >= totalWidth) {
-                x -= totalWidth;
-            }
+            // Normalize position using modulo to handle large offsets
+            // This ensures x stays within bounds
+            x = ((x % totalWidth) + totalWidth) % totalWidth;
             
             this.symbols[i].x = x;
         }
@@ -90,17 +88,14 @@ export class Reel {
             this.currentOffset -= remainder;
         }
 
-        // Update all symbol positions to snap to grid
+        // Update all symbol positions with proper wrapping
+        const totalWidth = this.symbolCount * this.symbolSize;
+        
         for (let i = 0; i < this.symbols.length; i++) {
             let x = i * this.symbolSize + this.currentOffset;
             
-            // Wrap symbols around
-            const totalWidth = this.symbolCount * this.symbolSize;
-            if (x < -this.symbolSize) {
-                x += totalWidth;
-            } else if (x >= totalWidth) {
-                x -= totalWidth;
-            }
+            // Normalize position using modulo
+            x = ((x % totalWidth) + totalWidth) % totalWidth;
             
             this.symbols[i].x = x;
         }
