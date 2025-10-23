@@ -1,16 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { AssetLoader } from '../utils/AssetLoader';
-
-const SYMBOL_TEXTURES = [
-    'symbol1.png',
-    'symbol2.png',
-    'symbol3.png',
-    'symbol4.png',
-    'symbol5.png',
-];
-
-const SPIN_SPEED = 50; // Pixels per frame
-const SLOWDOWN_RATE = 0.95; // Rate at which the reel slows down
+import { REEL_CONFIG } from '../utils/constants';
 
 export class Reel {
     public container: PIXI.Container;
@@ -41,12 +31,12 @@ export class Reel {
     }
 
     private createRandomSymbol(): PIXI.Sprite {
-        // TODO:Get a random symbol texture
-        const randomIndex = Math.floor(Math.random() * SYMBOL_TEXTURES.length);
-        const textureName = SYMBOL_TEXTURES[randomIndex];
+        // Get a random symbol texture
+        const randomIndex = Math.floor(Math.random() * REEL_CONFIG.SYMBOL_TEXTURES.length);
+        const textureName = REEL_CONFIG.SYMBOL_TEXTURES[randomIndex];
         const texture = AssetLoader.getTexture(textureName);
 
-        // TODO:Create a sprite with the texture
+        // Create a sprite with the texture
         const sprite = new PIXI.Sprite(texture);
         sprite.width = this.symbolSize;
         sprite.height = this.symbolSize;
@@ -57,7 +47,7 @@ export class Reel {
     public update(delta: number): void {
         if (!this.isSpinning && this.speed === 0) return;
 
-        // TODO:Move symbols horizontally
+        // Move symbols horizontally
         if (this.isSpinning) {
             this.currentOffset -= this.speed * delta;
         }
@@ -79,10 +69,10 @@ export class Reel {
 
         // If we're stopping, slow down the reel
         if (!this.isSpinning && this.speed > 0) {
-            this.speed *= SLOWDOWN_RATE;
+            this.speed *= REEL_CONFIG.SLOWDOWN_RATE;
 
             // If speed is very low, stop completely and snap to grid
-            if (this.speed < 0.5) {
+            if (this.speed < REEL_CONFIG.STOP_THRESHOLD) {
                 this.speed = 0;
                 this.snapToGrid();
             }
@@ -90,7 +80,6 @@ export class Reel {
     }
 
     private snapToGrid(): void {
-        // TODO: Snap symbols to horizontal grid positions
         // Snap to the nearest symbol position
         const remainder = this.currentOffset % this.symbolSize;
         const isNegative = this.currentOffset < 0;
@@ -119,7 +108,7 @@ export class Reel {
 
     public startSpin(): void {
         this.isSpinning = true;
-        this.speed = SPIN_SPEED;
+        this.speed = REEL_CONFIG.SPIN_SPEED;
     }
 
     public stopSpin(): void {

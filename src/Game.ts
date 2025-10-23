@@ -2,7 +2,11 @@ import * as PIXI from 'pixi.js';
 import { SlotMachine } from './slots/SlotMachine';
 import { AssetLoader } from './utils/AssetLoader';
 import { UI } from './ui/UI';
+import { GAME_CONFIG } from './utils/constants';
 
+/**
+ * Main Game class that manages the application, rendering, and game lifecycle
+ */
 export class Game {
     private app: PIXI.Application;
     private slotMachine!: SlotMachine;
@@ -11,9 +15,9 @@ export class Game {
 
     constructor() {
         this.app = new PIXI.Application({
-            width: 1280,
-            height: 800,
-            backgroundColor: 0x1099bb,
+            width: GAME_CONFIG.WIDTH,
+            height: GAME_CONFIG.HEIGHT,
+            backgroundColor: GAME_CONFIG.BACKGROUND_COLOR,
             resolution: window.devicePixelRatio || 1,
             autoDensity: true,
         });
@@ -33,6 +37,9 @@ export class Game {
         this.resize();
     }
 
+    /**
+     * Initializes the game by loading assets and setting up the slot machine and UI
+     */
     public async init(): Promise<void> {
         try {
             await this.assetLoader.loadAssets();
@@ -51,12 +58,18 @@ export class Game {
         }
     }
 
+    /**
+     * Updates the game state for each frame
+     */
     private update(delta: number): void {
         if (this.slotMachine) {
             this.slotMachine.update(delta);
         }
     }
 
+    /**
+     * Handles window resizing and adjusts the game canvas accordingly
+     */
     private resize(): void {
         if (!this.app || !this.app.renderer) return;
 
@@ -67,13 +80,13 @@ export class Game {
         const h = gameContainer.clientHeight;
 
         // Calculate scale to fit the container while maintaining aspect ratio
-        const scale = Math.min(w / 1280, h / 800);
+        const scale = Math.min(w / GAME_CONFIG.WIDTH, h / GAME_CONFIG.HEIGHT);
 
         this.app.stage.scale.set(scale);
 
         // Center the stage
         this.app.renderer.resize(w, h);
         this.app.stage.position.set(w / 2, h / 2);
-        this.app.stage.pivot.set(1280 / 2, 800 / 2);
+        this.app.stage.pivot.set(GAME_CONFIG.WIDTH / 2, GAME_CONFIG.HEIGHT / 2);
     }
 }

@@ -1,0 +1,17 @@
+big-boom-h.png
+size:804,481
+filter:Linear,Linear
+pma:true
+Layer 1
+bounds:726,94,76,76
+offsets:1,1,78,78
+bg_2_boom
+bounds:493,172,305,307
+offsets:3,2,311,312
+bg_boom
+bounds:493,2,168,168
+offsets:7,7,182,182
+boom_circle
+bounds:2,9,489,470
+tail
+bounds:663,7,61,163
