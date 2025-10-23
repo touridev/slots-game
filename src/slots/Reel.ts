@@ -38,13 +38,21 @@ export class Reel {
     private addViewportClipping(): void {
         // Create a clipping rectangle to show only the visible reel area
         try {
-            const clipArea = new PIXI.Rectangle(0, 0, this.symbolSize * this.symbolCount, this.symbolSize);
-            this.symbolsContainer.hitArea = clipArea;
-            this.symbolsContainer.mask = new PIXI.Graphics()
-                .beginFill(0xFFFFFF)
-                .drawRect(0, 0, this.symbolSize * this.symbolCount, this.symbolSize)
-                .endFill();
-            this.container.addChild(this.symbolsContainer.mask);
+            // Create mask graphics with proper initialization
+            const maskGraphics = new PIXI.Graphics();
+            maskGraphics.beginFill(0xFFFFFF);
+            maskGraphics.drawRect(0, 0, this.symbolSize * this.symbolCount, this.symbolSize);
+            maskGraphics.endFill();
+            
+            // Set the mask on the symbols container
+            this.symbolsContainer.mask = maskGraphics;
+            
+            // Add mask to container for rendering
+            this.container.addChild(maskGraphics);
+            
+            // Ensure the mask is properly positioned
+            maskGraphics.x = 0;
+            maskGraphics.y = 0;
         } catch (error) {
             // Mask might fail in test environment, that's okay
             console.debug('Could not create visual mask (expected in test environment)');
@@ -134,7 +142,7 @@ export class Reel {
      */
     private updateSymbolPositions(): void {
         const totalWidth = this.symbolCount * this.symbolSize;
-        
+
         for (let i = 0; i < this.symbols.length; i++) {
             let x = i * this.symbolSize + this.currentOffset;
             
@@ -145,6 +153,13 @@ export class Reel {
             }
             
             this.symbols[i].x = wrappedX;
+            
+            // Hide symbols that are outside the visible area
+            if (wrappedX < -this.symbolSize || wrappedX > totalWidth) {
+                this.symbols[i].visible = false;
+            } else {
+                this.symbols[i].visible = true;
+            }
         }
     }
 
