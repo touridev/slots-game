@@ -128,6 +128,13 @@ export class SlotMachine {
 
             if (this.winAnimation) {
                 // TODO: Play the win animation found in "big-boom-h" spine
+                this.winAnimation.visible = true;
+                this.winAnimation.state.setAnimation(0, 'animation', false);
+                
+                // Hide animation after it finishes
+                setTimeout(() => {
+                    this.winAnimation!.visible = false;
+                }, 2000);
             }
         }
     }
