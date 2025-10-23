@@ -19,6 +19,7 @@ export class Reel {
     private symbolCount: number;
     private speed: number = 0;
     private isSpinning: boolean = false;
+    private currentOffset: number = 0; // Track horizontal offset for snapping
 
     constructor(symbolCount: number, symbolSize: number) {
         this.container = new PIXI.Container();
@@ -31,20 +32,50 @@ export class Reel {
 
     private createSymbols(): void {
         // Create symbols for the reel, arranged horizontally
+        for (let i = 0; i < this.symbolCount; i++) {
+            const symbol = this.createRandomSymbol();
+            symbol.x = i * this.symbolSize;
+            this.symbols.push(symbol);
+            this.container.addChild(symbol);
+        }
     }
 
     private createRandomSymbol(): PIXI.Sprite {
         // TODO:Get a random symbol texture
+        const randomIndex = Math.floor(Math.random() * SYMBOL_TEXTURES.length);
+        const textureName = SYMBOL_TEXTURES[randomIndex];
+        const texture = AssetLoader.getTexture(textureName);
 
         // TODO:Create a sprite with the texture
+        const sprite = new PIXI.Sprite(texture);
+        sprite.width = this.symbolSize;
+        sprite.height = this.symbolSize;
 
-        return new PIXI.Sprite();
+        return sprite;
     }
 
     public update(delta: number): void {
         if (!this.isSpinning && this.speed === 0) return;
 
         // TODO:Move symbols horizontally
+        if (this.isSpinning) {
+            this.currentOffset -= this.speed * delta;
+        }
+
+        // Update symbol positions
+        for (let i = 0; i < this.symbols.length; i++) {
+            let x = i * this.symbolSize + this.currentOffset;
+            
+            // Wrap symbols around (tiling effect)
+            const totalWidth = this.symbolCount * this.symbolSize;
+            if (x < -this.symbolSize) {
+                x += totalWidth;
+            } else if (x >= totalWidth) {
+                x -= totalWidth;
+            }
+            
+            this.symbols[i].x = x;
+        }
 
         // If we're stopping, slow down the reel
         if (!this.isSpinning && this.speed > 0) {
@@ -60,7 +91,30 @@ export class Reel {
 
     private snapToGrid(): void {
         // TODO: Snap symbols to horizontal grid positions
+        // Snap to the nearest symbol position
+        const remainder = this.currentOffset % this.symbolSize;
+        const isNegative = this.currentOffset < 0;
+        
+        if (isNegative) {
+            this.currentOffset -= remainder === 0 ? 0 : this.symbolSize - Math.abs(remainder);
+        } else {
+            this.currentOffset -= remainder;
+        }
 
+        // Update all symbol positions to snap to grid
+        for (let i = 0; i < this.symbols.length; i++) {
+            let x = i * this.symbolSize + this.currentOffset;
+            
+            // Wrap symbols around
+            const totalWidth = this.symbolCount * this.symbolSize;
+            if (x < -this.symbolSize) {
+                x += totalWidth;
+            } else if (x >= totalWidth) {
+                x -= totalWidth;
+            }
+            
+            this.symbols[i].x = x;
+        }
     }
 
     public startSpin(): void {
