@@ -80,15 +80,19 @@ export class Reel {
             this.currentOffset -= this.speed * delta;
         }
 
-        // Update symbol positions with proper wrapping
+        // Update symbol positions with smooth wrapping
         const totalWidth = this.symbolCount * this.symbolSize;
         
         for (let i = 0; i < this.symbols.length; i++) {
             let x = i * this.symbolSize + this.currentOffset;
             
-            // Normalize position using modulo to handle large offsets
-            // This ensures x stays within bounds
-            x = ((x % totalWidth) + totalWidth) % totalWidth;
+            // Smooth wrapping: keep position within visible range
+            // Use floor to find how many complete wraps have occurred
+            if (x < 0) {
+                x += Math.ceil(Math.abs(x) / totalWidth) * totalWidth;
+            } else if (x >= totalWidth) {
+                x -= Math.floor(x / totalWidth) * totalWidth;
+            }
             
             this.symbols[i].x = x;
         }
@@ -109,8 +113,13 @@ export class Reel {
         // Snap to the nearest symbol position smoothly
         const totalWidth = this.symbolCount * this.symbolSize;
         
-        // Get current position in normalized form
-        let normalizedOffset = ((this.currentOffset % totalWidth) + totalWidth) % totalWidth;
+        // Normalize offset to 0-totalWidth range for snapping
+        let normalizedOffset = this.currentOffset;
+        if (normalizedOffset < 0) {
+            normalizedOffset += Math.ceil(Math.abs(normalizedOffset) / totalWidth) * totalWidth;
+        } else if (normalizedOffset >= totalWidth) {
+            normalizedOffset -= Math.floor(normalizedOffset / totalWidth) * totalWidth;
+        }
         
         // Find the closest grid position
         const nearestGridPosition = Math.round(normalizedOffset / this.symbolSize) * this.symbolSize;
@@ -122,12 +131,16 @@ export class Reel {
             this.currentOffset -= diff;
         }
 
-        // Update all symbol positions with proper wrapping
+        // Update all symbol positions with smooth wrapping
         for (let i = 0; i < this.symbols.length; i++) {
             let x = i * this.symbolSize + this.currentOffset;
             
-            // Normalize position using modulo
-            x = ((x % totalWidth) + totalWidth) % totalWidth;
+            // Smooth wrapping
+            if (x < 0) {
+                x += Math.ceil(Math.abs(x) / totalWidth) * totalWidth;
+            } else if (x >= totalWidth) {
+                x -= Math.floor(x / totalWidth) * totalWidth;
+            }
             
             this.symbols[i].x = x;
         }
