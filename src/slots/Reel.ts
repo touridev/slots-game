@@ -113,22 +113,27 @@ export class Reel {
         // Snap to the nearest symbol position smoothly
         const totalWidth = this.symbolCount * this.symbolSize;
         
-        // Normalize offset to 0-totalWidth range for snapping
-        let normalizedOffset = this.currentOffset;
+        // Normalize currentOffset to 0-totalWidth range
+        let normalizedOffset = this.currentOffset % totalWidth;
         if (normalizedOffset < 0) {
-            normalizedOffset += Math.ceil(Math.abs(normalizedOffset) / totalWidth) * totalWidth;
-        } else if (normalizedOffset >= totalWidth) {
-            normalizedOffset -= Math.floor(normalizedOffset / totalWidth) * totalWidth;
+            normalizedOffset += totalWidth;
         }
         
         // Find the closest grid position
         const nearestGridPosition = Math.round(normalizedOffset / this.symbolSize) * this.symbolSize;
         
-        // Smoothly move to grid position (in steps to avoid jitter)
-        const diff = normalizedOffset - nearestGridPosition;
+        // Ensure nearest grid position is within bounds (0 to totalWidth)
+        const snappedPosition = nearestGridPosition >= totalWidth ? 0 : nearestGridPosition;
+        
+        // Update currentOffset to the snapped position
+        // Calculate the difference to maintain smooth transition
+        const diff = normalizedOffset - snappedPosition;
         if (Math.abs(diff) > 0.1) {
-            // Only snap if difference is significant
-            this.currentOffset -= diff;
+            // Apply the difference to snap smoothly
+            this.currentOffset = this.currentOffset - diff;
+        } else {
+            // Already close to a grid position
+            this.currentOffset = snappedPosition - (this.currentOffset - normalizedOffset);
         }
 
         // Update all symbol positions with smooth wrapping
@@ -136,13 +141,12 @@ export class Reel {
             let x = i * this.symbolSize + this.currentOffset;
             
             // Smooth wrapping
-            if (x < 0) {
-                x += Math.ceil(Math.abs(x) / totalWidth) * totalWidth;
-            } else if (x >= totalWidth) {
-                x -= Math.floor(x / totalWidth) * totalWidth;
+            let wrappedX = x % totalWidth;
+            if (wrappedX < 0) {
+                wrappedX += totalWidth;
             }
             
-            this.symbols[i].x = x;
+            this.symbols[i].x = wrappedX;
         }
     }
 
