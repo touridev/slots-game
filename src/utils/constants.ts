@@ -14,7 +14,7 @@ export const REEL_CONFIG = {
     ],
     SPIN_SPEED: 50,
     SLOWDOWN_RATE: 0.95,
-    STOP_THRESHOLD: 0.5,
+    STOP_THRESHOLD: 5.0, // Increased threshold for earlier snapping
     REEL_SPACING: 10,
 } as const;
 
@@ -46,7 +46,7 @@ export const ANIMATION_CONFIG = {
     WIN_ANIMATION_DURATION: 2000, // ms
     REEL_SPIN_DELAY: 200, // ms between reels starting
     REEL_STOP_DELAY: 400, // ms between reels stopping
-    SPIN_TOTAL_DURATION: 500, // ms base spin duration
+    SPIN_TOTAL_DURATION: 2000, // ms base spin duration (increased to allow proper deceleration)
 } as const;
 
 /**

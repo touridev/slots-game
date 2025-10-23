@@ -11,6 +11,7 @@ export class Reel {
     private speed: number = 0;
     private isSpinning: boolean = false;
     private currentOffset: number = 0; // Track horizontal offset for snapping
+    private hasSnapped: boolean = false; // Prevent multiple snapping calls
 
     constructor(symbolCount: number, symbolSize: number) {
         this.container = new PIXI.Container();
@@ -89,6 +90,8 @@ export class Reel {
         // Move symbols horizontally
         if (this.isSpinning) {
             this.currentOffset -= this.speed * delta;
+            // Ensure currentOffset is an integer to prevent accumulation of fractional values
+            this.currentOffset = Math.round(this.currentOffset);
         }
 
         // Update all symbol positions
@@ -98,8 +101,8 @@ export class Reel {
         if (!this.isSpinning && this.speed > 0) {
             this.speed *= REEL_CONFIG.SLOWDOWN_RATE;
 
-            // If speed is very low, stop completely and snap to grid
-            if (this.speed < REEL_CONFIG.STOP_THRESHOLD) {
+            // If speed is low enough, snap to grid and stop completely
+            if (this.speed < REEL_CONFIG.STOP_THRESHOLD && !this.hasSnapped) {
                 this.speed = 0;
                 this.snapToGrid();
             }
@@ -107,6 +110,9 @@ export class Reel {
     }
 
     private snapToGrid(): void {
+        // Prevent multiple snapping calls
+        if (this.hasSnapped) return;
+        
         // Snap to the nearest symbol position smoothly
         const totalWidth = this.symbolCount * this.symbolSize;
         
@@ -116,22 +122,23 @@ export class Reel {
             normalizedOffset += totalWidth;
         }
         
-        // Find the closest grid position
+        // Find the closest grid position (0, symbolSize, 2*symbolSize, etc.)
         const nearestGridPosition = Math.round(normalizedOffset / this.symbolSize) * this.symbolSize;
         
-        // Ensure nearest grid position is within bounds (0 to totalWidth)
-        const snappedPosition = nearestGridPosition >= totalWidth ? 0 : nearestGridPosition;
+        // Ensure we snap to a valid grid position that shows exactly 5 symbols
+        // The snapped position should be 0, symbolSize, 2*symbolSize, 3*symbolSize, or 4*symbolSize
+        const snappedPosition = Math.min(nearestGridPosition, 4 * this.symbolSize);
         
-        // Update currentOffset to the snapped position
-        // Calculate the difference to maintain smooth transition
+        // Calculate the difference between current and target position
         const diff = normalizedOffset - snappedPosition;
-        if (Math.abs(diff) > 0.1) {
-            // Apply the difference to snap smoothly
-            this.currentOffset = this.currentOffset - diff;
-        } else {
-            // Already close to a grid position
-            this.currentOffset = snappedPosition - (this.currentOffset - normalizedOffset);
-        }
+        
+        // Apply the correction to currentOffset immediately
+        this.currentOffset = this.currentOffset - diff;
+        // Ensure currentOffset is an integer after snapping
+        this.currentOffset = Math.round(this.currentOffset);
+        
+        // Mark as snapped to prevent multiple calls
+        this.hasSnapped = true;
 
         // Update all symbol positions
         this.updateSymbolPositions();
@@ -152,6 +159,9 @@ export class Reel {
                 wrappedX += totalWidth;
             }
             
+            // Ensure position is an integer to prevent sub-pixel rendering
+            wrappedX = Math.round(wrappedX);
+            
             this.symbols[i].x = wrappedX;
             
             // Hide symbols that are outside the visible area
@@ -166,6 +176,7 @@ export class Reel {
     public startSpin(): void {
         this.isSpinning = true;
         this.speed = REEL_CONFIG.SPIN_SPEED;
+        this.hasSnapped = false; // Reset snapped flag for new spin
     }
 
     public stopSpin(): void {

@@ -100,6 +100,7 @@ export class SlotMachine {
                 // If this is the last reel, check for wins and enable spin button
                 if (i === this.reels.length - 1) {
                     // Wait longer to allow all reels to fully decelerate and snap to grid
+                    // Increased wait time to ensure all reels have completed their animation
                     setTimeout(() => {
                         this.checkWin();
                         this.isSpinning = false;
@@ -108,7 +109,7 @@ export class SlotMachine {
                             this.spinButton.texture = AssetLoader.getTexture('button_spin.png');
                             this.spinButton.interactive = true;
                         }
-                    }, 1500);
+                    }, 2000); // Increased from 1500ms to 2000ms
                 }
             }, i * ANIMATION_CONFIG.REEL_STOP_DELAY);
         }
