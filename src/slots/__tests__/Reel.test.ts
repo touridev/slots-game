@@ -22,7 +22,7 @@ describe('Reel', () => {
             const symbolSize = 150;
             const reel = new Reel(symbolCount, symbolSize);
 
-            expect(reel.container.children.length).toBe(symbolCount);
+            expect(reel.children.length).toBe(symbolCount);
         });
 
         it('should initialize symbols with correct size', () => {
@@ -30,7 +30,7 @@ describe('Reel', () => {
             const reel = new Reel(6, symbolSize);
 
             // Check first symbol dimensions
-            const firstSymbol = reel.container.getChildAt(0) as PIXI.Sprite;
+            const firstSymbol = reel.children[0] as PIXI.Sprite;
             expect(firstSymbol.width).toBe(symbolSize);
             expect(firstSymbol.height).toBe(symbolSize);
         });
@@ -40,7 +40,7 @@ describe('Reel', () => {
             const reel = new Reel(6, symbolSize);
 
             for (let i = 0; i < 6; i++) {
-                const symbol = reel.container.getChildAt(i) as PIXI.Sprite;
+                const symbol = reel.children[i] as PIXI.Sprite;
                 expect(symbol.x).toBe(i * symbolSize);
             }
         });
@@ -55,7 +55,7 @@ describe('Reel', () => {
             reel.update(1);
 
             // After update with spinning, symbols should have moved
-            const firstSymbol = reel.container.getChildAt(0) as PIXI.Sprite;
+            const firstSymbol = reel.children[0] as PIXI.Sprite;
             // The initial position was 0, it should have moved
             expect(firstSymbol.x).not.toBe(0);
         });
@@ -76,7 +76,7 @@ describe('Reel', () => {
             let finalPosition: number = 0;
             for (let i = 0; i < 200; i++) {
                 reel.update(1);
-                finalPosition = (reel.container.getChildAt(0) as PIXI.Sprite).x;
+                finalPosition = (reel.children[0] as PIXI.Sprite).x;
             }
 
             // After full stop and snapping, position should be stable
@@ -85,7 +85,7 @@ describe('Reel', () => {
                 reel.update(1);
             }
 
-            expect((reel.container.getChildAt(0) as PIXI.Sprite).x).toBe(stablePosition);
+            expect((reel.children[0] as PIXI.Sprite).x).toBe(stablePosition);
         });
 
         it('should snap to grid when speed becomes very low', () => {
@@ -106,7 +106,7 @@ describe('Reel', () => {
 
             // After snapping to grid, all symbols should be at valid grid positions
             for (let i = 0; i < 6; i++) {
-                const symbol = reel.container.getChildAt(i) as PIXI.Sprite;
+                const symbol = reel.children[i] as PIXI.Sprite;
                 // Position should be a multiple of symbolSize (considering wrapping)
                 const expectedPositions = [-150, 0, 150, 300, 450, 600, 750, 900];
                 const isValidPosition = expectedPositions.some(
