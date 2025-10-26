@@ -54,6 +54,12 @@ export class UI {
      */
     private onSpinButtonClick(): void {
         sound.play('Spin button');
+        
+        // Add some visual feedback
+        this.spinButton.scale.set(0.95);
+        setTimeout(() => {
+            this.spinButton.scale.set(1.0);
+        }, 100);
 
         this.slotMachine.spin();
     }
@@ -63,6 +69,9 @@ export class UI {
      */
     private onButtonOver(event: PIXI.FederatedPointerEvent): void {
         (event.currentTarget as PIXI.Sprite).scale.set(UI_CONFIG.BUTTON_HOVER_SCALE);
+        
+        // TODO: Add hover sound effect
+        // TODO: Add tooltip display
     }
 
     /**
@@ -70,5 +79,8 @@ export class UI {
      */
     private onButtonOut(event: PIXI.FederatedPointerEvent): void {
         (event.currentTarget as PIXI.Sprite).scale.set(1.0);
+        
+        // TODO: Add smooth transition
+        // TODO: Hide tooltip
     }
 }

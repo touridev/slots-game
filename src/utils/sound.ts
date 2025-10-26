@@ -1,4 +1,4 @@
-// TODO: Implement sound player using the "howler" package
+// Sound player implementation using the "howler" package
 import { Howl } from 'howler';
 
 /**
@@ -44,7 +44,7 @@ export const sound = {
             const soundFile = soundLibrary[alias];
             if (soundFile) {
                 soundFile.play();
-                console.log(`Playing sound: ${alias}`);
+                // console.log(`Playing sound: ${alias}`); // commented out to reduce noise
             } else {
                 console.warn(`Sound not found: ${alias}`);
             }

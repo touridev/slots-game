@@ -66,10 +66,11 @@ export class AssetLoader {
                 }
             } catch (error) {
                 console.error('Error loading spine animations:', error);
+                // Spine animations are optional, continue without them
             }
 
             await this.loadSounds();
-            console.log('Assets loaded successfully');
+            console.log('All assets loaded successfully! 🎨');
         } catch (error) {
             console.error('Error loading assets:', error);
             throw error;
@@ -81,6 +82,9 @@ export class AssetLoader {
             SOUNDS.forEach(soundFile => {
                 sound.add(soundFile.split('.')[0], SOUNDS_PATH + soundFile);
             });
+            
+            // Debug: Log sound loading (remove in production)
+            // console.log('Loaded sounds:', SOUNDS.length);
         } catch (error) {
             console.error('Error loading sounds:', error);
             throw error;

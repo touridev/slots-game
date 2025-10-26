@@ -90,6 +90,12 @@ export class SlotMachine {
         setTimeout(() => {
             this.stopSpin();
         }, ANIMATION_CONFIG.SPIN_TOTAL_DURATION + (this.reels.length - 1) * ANIMATION_CONFIG.REEL_SPIN_DELAY);
+        
+        // TODO: Add haptic feedback for mobile
+        // TODO: Add visual effects for spin start
+        
+        // Track spin for analytics
+        // analytics.trackSpin();
     }
 
     private stopSpin(): void {
@@ -97,19 +103,29 @@ export class SlotMachine {
             setTimeout(() => {
                 this.reels[i].stopSpin();
 
-                // If this is the last reel, check for wins and enable spin button
+                // If this is the last reel, wait for all animations to complete
                 if (i === this.reels.length - 1) {
-                    // Wait longer to allow all reels to fully decelerate and snap to grid
-                    // Increased wait time to ensure all reels have completed their animation
-                    setTimeout(() => {
-                        this.checkWin();
-                        this.isSpinning = false;
+                    // Check if all reels have finished by monitoring their animation state
+                    const checkReelsComplete = () => {
+                        const allComplete = this.reels.every(reel => reel.isAnimationComplete());
+                        
+                        if (allComplete) {
+                            // All reels are done, now trigger win check immediately
+                            this.checkWin();
+                            this.isSpinning = false;
 
-                        if (this.spinButton) {
-                            this.spinButton.texture = AssetLoader.getTexture('button_spin.png');
-                            this.spinButton.interactive = true;
+                            if (this.spinButton) {
+                                this.spinButton.texture = AssetLoader.getTexture('button_spin.png');
+                                this.spinButton.interactive = true;
+                            }
+                        } else {
+                            // Some reels still animating, check again soon
+                            setTimeout(checkReelsComplete, 50);
                         }
-                    }, 2000); // Increased from 1500ms to 2000ms
+                    };
+                    
+                    // Start checking after a short delay
+                    setTimeout(checkReelsComplete, 100);
                 }
             }, i * ANIMATION_CONFIG.REEL_STOP_DELAY);
         }
@@ -121,7 +137,7 @@ export class SlotMachine {
 
         if (randomWin) {
             sound.play('win');
-            console.log('Winner!');
+            console.log('Winner! 🎉'); // Added emoji for fun
 
             if (this.winAnimation) {
                 // Play the win animation found in "big-boom-h" spine
@@ -143,7 +159,16 @@ export class SlotMachine {
                     this.winAnimation!.visible = false;
                 }, ANIMATION_CONFIG.WIN_ANIMATION_DURATION);
             }
+            
+            // Track win for analytics
+            // analytics.trackWin();
+        } else {
+            // console.log('Better luck next time!'); // commented out for now
+            // analytics.trackLoss();
         }
+        
+        // TODO: Add win streak tracking
+        // TODO: Add different win types
     }
 
     private getFirstAnimationName(spine: Spine): string | null {

@@ -16,6 +16,9 @@ describe('Reel', () => {
         );
     });
 
+    // TODO: Add more edge case tests
+    // TODO: Test performance with many symbols
+
     describe('constructor and symbol creation', () => {
         it('should create a reel with the correct number of symbols', () => {
             const symbolCount = 6;
