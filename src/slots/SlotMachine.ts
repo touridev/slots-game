@@ -37,15 +37,53 @@ export class SlotMachine {
     private createBackground(): void {
         try {
             const config = configManager.get('reels');
+            
+            // Create modern gradient background
             const background = new PIXI.Graphics();
-            background.beginFill(0x000000, 0.5);
-            background.drawRect(
+            
+            // Outer glow effect
+            background.beginFill(0x4a90e2, 0.3);
+            background.drawRoundedRect(
+                -30,
+                -30,
+                config.symbolSize * config.symbolsPerReel + 60,
+                config.symbolSize * config.count + config.reelSpacing * (config.count - 1) + 60,
+                15
+            );
+            background.endFill();
+            
+            // Main background with gradient effect
+            background.beginFill(0x1a1a2e, 0.9);
+            background.drawRoundedRect(
                 -20,
                 -20,
                 config.symbolSize * config.symbolsPerReel + 40,
-                config.symbolSize * config.count + config.reelSpacing * (config.count - 1) + 40
+                config.symbolSize * config.count + config.reelSpacing * (config.count - 1) + 40,
+                10
             );
             background.endFill();
+            
+            // Inner highlight
+            background.beginFill(0x4a90e2, 0.2);
+            background.drawRoundedRect(
+                -15,
+                -15,
+                config.symbolSize * config.symbolsPerReel + 30,
+                config.symbolSize * config.count + config.reelSpacing * (config.count - 1) + 30,
+                8
+            );
+            background.endFill();
+            
+            // Add border
+            background.lineStyle(2, 0x4a90e2, 0.8);
+            background.drawRoundedRect(
+                -20,
+                -20,
+                config.symbolSize * config.symbolsPerReel + 40,
+                config.symbolSize * config.count + config.reelSpacing * (config.count - 1) + 40,
+                10
+            );
+            
             this.container.addChild(background);
         } catch (error) {
             console.error('Error creating background:', error);

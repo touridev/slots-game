@@ -72,6 +72,10 @@ export class Game {
             this.slotMachine.update(delta);
         }
         
+        if (this.ui) {
+            this.ui.update(delta);
+        }
+        
         performanceMonitor.update(delta, this.app.renderer);
         
         const debugConfig = configManager.get('debug');

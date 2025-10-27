@@ -55,7 +55,7 @@ const DEFAULT_CONFIG: GameConfig = {
     display: {
         width: 1280,
         height: 800,
-        backgroundColor: 0x1099bb,
+        backgroundColor: 0x1a1a2e,
         resolution: window.devicePixelRatio || 1,
         autoDensity: true,
     },

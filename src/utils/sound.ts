@@ -9,6 +9,7 @@ interface SoundLibrary {
 }
 
 const soundLibrary: SoundLibrary = {};
+let soundEnabled: boolean = true;
 
 /**
  * Sound player module that manages audio playback using Howler.js
@@ -40,6 +41,8 @@ export const sound = {
      * @param alias - The alias of the sound to play
      */
     play: (alias: string): void => {
+        if (!soundEnabled) return;
+        
         try {
             const soundFile = soundLibrary[alias];
             if (soundFile) {
@@ -51,5 +54,29 @@ export const sound = {
         } catch (error) {
             console.error(`Failed to play sound ${alias}:`, error);
         }
+    },
+    
+    /**
+     * Enables sound playback
+     */
+    enable: (): void => {
+        soundEnabled = true;
+        console.log('Sound enabled');
+    },
+    
+    /**
+     * Disables sound playback
+     */
+    disable: (): void => {
+        soundEnabled = false;
+        console.log('Sound disabled');
+    },
+    
+    /**
+     * Checks if sound is enabled
+     * @returns true if sound is enabled, false otherwise
+     */
+    isEnabled: (): boolean => {
+        return soundEnabled;
     }
 };
