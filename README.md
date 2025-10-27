@@ -22,7 +22,7 @@ A slots game built with TypeScript, PixiJS, and Webpack. Has horizontal reel spi
 
 1. Clone the repo
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/touridev/slots-game
    cd slots-game
    ```
 
