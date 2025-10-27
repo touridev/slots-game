@@ -37,8 +37,147 @@ describe('Reel', () => {
         );
     });
 
-    // TODO: Add more edge case tests
-    // TODO: Test performance with many symbols
+    describe('edge cases', () => {
+        it('handles zero symbols', () => {
+            const reel = new Reel(0, 150, 0);
+            expect(reel.children.length).toBe(0);
+        });
+
+        it('handles single symbol', () => {
+            const reel = new Reel(1, 150, 0);
+            expect(reel.children.length).toBe(1);
+            
+            const symbol = reel.children[0] as PIXI.Sprite;
+            expect(symbol.x).toBe(0);
+            expect(symbol.width).toBe(150);
+        });
+
+        it('handles many symbols', () => {
+            const reel = new Reel(100, 150, 0);
+            expect(reel.children.length).toBe(100);
+            
+            for (let i = 0; i < 100; i++) {
+                const symbol = reel.children[i] as PIXI.Sprite;
+                expect(symbol.x).toBe(i * 150);
+            }
+        });
+
+        it('handles rapid start/stop', () => {
+            const reel = new Reel(6, 150, 0);
+            
+            for (let i = 0; i < 10; i++) {
+                reel.startSpin();
+                reel.stopSpin();
+            }
+            
+            expect(reel.children.length).toBe(6);
+        });
+
+        it('handles zero delta', () => {
+            const reel = new Reel(6, 150, 0);
+            const initialX = (reel.children[0] as PIXI.Sprite).x;
+            
+            reel.update(0);
+            
+            expect((reel.children[0] as PIXI.Sprite).x).toBe(initialX);
+        });
+
+        it('handles negative delta', () => {
+            const reel = new Reel(6, 150, 0);
+            reel.startSpin();
+            
+            reel.update(-16);
+            
+            expect(reel.children.length).toBe(6);
+        });
+
+        it('handles large delta', () => {
+            const reel = new Reel(6, 150, 0);
+            reel.startSpin();
+            
+            reel.update(10000);
+            
+            expect(reel.children.length).toBe(6);
+        });
+
+        it('maintains visibility during spin', () => {
+            const reel = new Reel(6, 150, 0);
+            reel.startSpin();
+            
+            for (let i = 0; i < 50; i++) {
+                reel.update(16);
+            }
+            
+            for (let i = 0; i < 6; i++) {
+                const symbol = reel.children[i] as PIXI.Sprite;
+                expect(symbol.visible).toBe(true);
+            }
+        });
+    });
+
+    describe('performance', () => {
+        it('handles 1000 symbols', () => {
+            const startTime = performance.now();
+            const reel = new Reel(1000, 150, 0);
+            const creationTime = performance.now() - startTime;
+            
+            expect(reel.children.length).toBe(1000);
+            expect(creationTime).toBeLessThan(1000);
+        });
+
+        it('updates 1000 symbols efficiently', () => {
+            const reel = new Reel(1000, 150, 0);
+            reel.startSpin();
+            
+            const startTime = performance.now();
+            
+            for (let i = 0; i < 100; i++) {
+                reel.update(16);
+            }
+            
+            const updateTime = performance.now() - startTime;
+            
+            expect(updateTime).toBeLessThan(100);
+            expect(reel.children.length).toBe(1000);
+        });
+
+        it('handles memory efficiently', () => {
+            const reels: Reel[] = [];
+            
+            for (let i = 0; i < 10; i++) {
+                const reel = new Reel(100, 150, i);
+                reels.push(reel);
+            }
+            
+            expect(reels.length).toBe(10);
+            expect(reels[0].children.length).toBe(100);
+            
+            reels.forEach(reel => reel.destroy());
+        });
+
+        it('maintains smooth animation', () => {
+            const reel = new Reel(500, 150, 0);
+            reel.startSpin();
+            
+            let lastX = (reel.children[0] as PIXI.Sprite).x;
+            let smooth = true;
+            
+            for (let i = 0; i < 50; i++) {
+                reel.update(16);
+                const currentX = (reel.children[0] as PIXI.Sprite).x;
+                
+                const deltaX = Math.abs(currentX - lastX);
+                if (deltaX > 1000) {
+                    smooth = false;
+                    break;
+                }
+                
+                lastX = currentX;
+            }
+            
+            expect(smooth).toBe(true);
+        });
+    });
 
     describe('constructor and symbol creation', () => {
         it('should create a reel with the correct number of symbols', () => {

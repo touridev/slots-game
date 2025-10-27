@@ -1,7 +1,3 @@
-/**
- * Game settings and configuration
- */
-
 export interface GameConfig {
     display: {
         width: number;
@@ -151,7 +147,7 @@ export class ConfigManager {
             (this.config as any)[key] = subKeyOrValue;
             this.notifyListeners(key, subKeyOrValue);
         }
-        
+
         this.saveToLocalStorage();
     }
 
@@ -232,7 +228,7 @@ export class ConfigManager {
 
     private mergeConfig(target: any, source: any): any {
         const result = { ...target };
-        
+
         for (const key in source) {
             if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
                 result[key] = this.mergeConfig(target[key] || {}, source[key]);
@@ -240,7 +236,7 @@ export class ConfigManager {
                 result[key] = source[key];
             }
         }
-        
+
         return result;
     }
 }

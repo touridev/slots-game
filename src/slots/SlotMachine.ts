@@ -37,11 +37,9 @@ export class SlotMachine {
     private createBackground(): void {
         try {
             const config = configManager.get('reels');
-            
-            // Create modern gradient background
+
             const background = new PIXI.Graphics();
-            
-            // Outer glow effect
+
             background.beginFill(0x4a90e2, 0.3);
             background.drawRoundedRect(
                 -30,
@@ -51,8 +49,7 @@ export class SlotMachine {
                 15
             );
             background.endFill();
-            
-            // Main background with gradient effect
+
             background.beginFill(0x1a1a2e, 0.9);
             background.drawRoundedRect(
                 -20,
@@ -62,8 +59,7 @@ export class SlotMachine {
                 10
             );
             background.endFill();
-            
-            // Inner highlight
+
             background.beginFill(0x4a90e2, 0.2);
             background.drawRoundedRect(
                 -15,
@@ -73,8 +69,7 @@ export class SlotMachine {
                 8
             );
             background.endFill();
-            
-            // Add border
+
             background.lineStyle(2, 0x4a90e2, 0.8);
             background.drawRoundedRect(
                 -20,
@@ -92,7 +87,7 @@ export class SlotMachine {
 
     private createReels(): void {
         const config = configManager.get('reels');
-        
+
         for (let i = 0; i < config.count; i++) {
             const reel = new Reel(config.symbolsPerReel, config.symbolSize, i);
             reel.container.y = i * (config.symbolSize + config.reelSpacing);
@@ -103,7 +98,7 @@ export class SlotMachine {
 
     public update(delta: number): void {
         performanceMonitor.update(delta, this.app.renderer);
-        
+
         for (const reel of this.reels) {
             reel.update(delta);
         }
@@ -131,13 +126,13 @@ export class SlotMachine {
         setTimeout(() => {
             this.stopSpin();
         }, animationConfig.spinTotalDuration + (this.reels.length - 1) * animationConfig.reelSpinDelay);
-        
+
         eventManager.emit('spin:start', { timestamp: Date.now() });
     }
 
     private stopSpin(): void {
         const animationConfig = configManager.get('animation');
-        
+
         for (let i = 0; i < this.reels.length; i++) {
             setTimeout(() => {
                 this.reels[i].stopSpin();
@@ -145,7 +140,7 @@ export class SlotMachine {
                 if (i === this.reels.length - 1) {
                     const checkReelsComplete = () => {
                         const allComplete = this.reels.every(reel => reel.isAnimationComplete());
-                        
+
                         if (allComplete) {
                             this.checkWin();
                             this.isSpinning = false;
@@ -154,13 +149,13 @@ export class SlotMachine {
                                 this.spinButton.texture = AssetLoader.getTexture('button_spin.png');
                                 this.spinButton.interactive = true;
                             }
-                            
+
                             eventManager.emit('spin:stop', { timestamp: Date.now() });
                         } else {
                             setTimeout(checkReelsComplete, 50);
                         }
                     };
-                    
+
                     setTimeout(checkReelsComplete, 100);
                 }
             }, i * animationConfig.reelStopDelay);
@@ -170,34 +165,34 @@ export class SlotMachine {
     private checkWin(): void {
         const winConfig = configManager.get('win');
         const animationConfig = configManager.get('animation');
-        
+
         const randomWin = Math.random() < winConfig.winChance;
 
         if (randomWin) {
             sound.play('win');
-            console.log('Winner! 🎉');
+            console.log('Winner!');
 
             if (this.winAnimation) {
                 this.winAnimation.visible = true;
-                
-                const animationName = this.winAnimation.state.hasAnimation('animation') 
-                    ? 'animation' 
+
+                const animationName = this.winAnimation.state.hasAnimation('animation')
+                    ? 'animation'
                     : this.getFirstAnimationName(this.winAnimation);
-                
+
                 if (animationName) {
                     this.winAnimation.state.setAnimation(0, animationName, false);
                 } else {
                     console.warn('No animations found in win animation spine');
                 }
-                
+
                 setTimeout(() => {
                     this.winAnimation!.visible = false;
                 }, animationConfig.winAnimationDuration);
             }
-            
-            eventManager.emit('win:detected', { 
-                winType: 'standard', 
-                multiplier: winConfig.bonusMultiplier 
+
+            eventManager.emit('win:detected', {
+                winType: 'standard',
+                multiplier: winConfig.bonusMultiplier
             });
         }
     }
@@ -220,7 +215,7 @@ export class SlotMachine {
     private initSpineAnimations(): void {
         try {
             const config = configManager.get('reels');
-            
+
             const frameSpineData = AssetLoader.getSpine('base-feature-frame.json');
             if (frameSpineData) {
                 this.frameSpine = new Spine(frameSpineData.spineData);
@@ -260,14 +255,14 @@ export class SlotMachine {
     public destroy(): void {
         this.reels.forEach(reel => reel.destroy());
         this.reels = [];
-        
+
         if (this.frameSpine) {
             this.frameSpine.destroy();
         }
         if (this.winAnimation) {
             this.winAnimation.destroy();
         }
-        
+
         this.container.destroy();
     }
 }

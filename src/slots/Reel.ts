@@ -30,16 +30,12 @@ export class Reel {
 
         this.createSymbols();
         this.addViewportClipping();
-        
-        // Initialize symbols to grid-aligned positions
+
         this.updateSymbolPositions();
-        
+
         this.container.addChild(this.symbolsContainer);
     }
 
-    /**
-     * Getter for accessing container children (for testing compatibility)
-     */
     public get children(): PIXI.DisplayObject[] {
         return this.symbolsContainer.children;
     }
@@ -50,21 +46,21 @@ export class Reel {
             maskGraphics.beginFill(0xFFFFFF);
             maskGraphics.drawRect(0, 0, this.symbolSize * this.symbolCount, this.symbolSize);
             maskGraphics.endFill();
-            
+
             this.symbolsContainer.mask = maskGraphics;
             this.container.addChild(maskGraphics);
-            
+
             maskGraphics.x = 0;
             maskGraphics.y = 0;
         } catch (error) {
-            console.debug('Could not create visual mask (expected in test environment)');
+            console.debug('Could not create visual mask');
         }
     }
 
     private createSymbols(): void {
         const config = configManager.get('reels');
         const useObjectPooling = configManager.get('performance', 'enableObjectPooling');
-        
+
         for (let i = 0; i < this.symbolCount; i++) {
             const symbol = this.createRandomSymbol(useObjectPooling);
             symbol.x = i * this.symbolSize;
@@ -75,12 +71,12 @@ export class Reel {
 
     private createRandomSymbol(useObjectPooling: boolean = false): PIXI.Sprite {
         const config = configManager.get('reels');
-        
+
         const randomIndex = Math.floor(Math.random() * config.symbolTextures.length);
         const textureName = config.symbolTextures[randomIndex];
-        
+
         let sprite: PIXI.Sprite;
-        
+
         if (useObjectPooling) {
             sprite = spritePool.getSprite(textureName, this.symbolSize, this.symbolSize);
         } else {
@@ -89,7 +85,7 @@ export class Reel {
             sprite.width = this.symbolSize;
             sprite.height = this.symbolSize;
         }
-        
+
         sprite.alpha = 0.95 + Math.random() * 0.1;
         sprite.rotation = (Math.random() - 0.5) * 0.1;
 
@@ -98,13 +94,13 @@ export class Reel {
 
     public update(delta: number): void {
         const currentTime = performance.now();
-        
+
         if (currentTime - this.lastUpdateTime < 16) {
             return;
         }
-        
+
         this.lastUpdateTime = currentTime;
-        
+
         const normalizedDelta = Math.min(delta / (1000 / 60), 2.0);
 
         const config = configManager.get('reels');
@@ -112,7 +108,7 @@ export class Reel {
         if (this.isSnapping && !this.isSpinning) {
             const diff = this.snapTarget - this.currentOffset;
             const distance = Math.abs(diff);
-            
+
             if (distance > 0.5) {
                 const snapSpeed = distance * 0.5 * normalizedDelta;
                 const moveDistance = Math.min(snapSpeed, distance);
@@ -121,7 +117,7 @@ export class Reel {
                 this.currentOffset = this.snapTarget;
                 this.isSnapping = false;
             }
-            
+
             this.updateSymbolPositions();
             return;
         }
@@ -136,14 +132,14 @@ export class Reel {
 
         if (!this.isSpinning && this.speed > 0) {
             this.speed *= config.slowdownRate;
-            
+
             if (this.speed < config.stopThreshold && !this.hasSnapped) {
                 this.prepareSnap();
             }
-            
+
             if (this.hasSnapped && !this.isSnapping) {
                 const distanceToTarget = Math.abs(this.currentOffset - this.snapTarget);
-                
+
                 if (distanceToTarget < 5 || this.speed < 0.1) {
                     this.speed = 0;
                     this.isSnapping = true;
@@ -154,23 +150,23 @@ export class Reel {
 
     private prepareSnap(): void {
         if (this.hasSnapped) return;
-        
+
         const totalWidth = this.symbolCount * this.symbolSize;
-        
+
         let wrappedPosition = this.currentOffset % totalWidth;
         if (wrappedPosition < 0) {
             wrappedPosition += totalWidth;
         }
-        
+
         let targetPosition = Math.round(wrappedPosition / this.symbolSize) * this.symbolSize;
-        
+
         targetPosition = Math.max(0, Math.min(targetPosition, totalWidth - this.symbolSize));
-        
+
         const cycles = Math.floor(this.currentOffset / totalWidth);
         this.snapTarget = cycles * totalWidth + targetPosition;
-        
+
         this.currentOffset = wrappedPosition;
-        
+
         this.isSnapping = true;
         this.hasSnapped = true;
     }
@@ -186,7 +182,7 @@ export class Reel {
 
         for (let i = 0; i < this.symbols.length; i++) {
             let x = i * this.symbolSize + this.currentOffset;
-            
+
             let wrappedX = x % totalWidth;
             if (wrappedX < 0) {
                 wrappedX += totalWidth;
@@ -211,20 +207,20 @@ export class Reel {
         this.speed = config.spinSpeed;
         this.hasSnapped = false;
         this.isSnapping = false;
-        
+
         this.speed += Math.random() * 10 - 5;
-        
+
         this.symbolsContainer.alpha = 0.9;
         setTimeout(() => {
             this.symbolsContainer.alpha = 1.0;
         }, 100);
-        
+
         eventManager.emit('spin:start', { timestamp: Date.now() });
     }
 
     public stopSpin(): void {
         this.isSpinning = false;
-        
+
         eventManager.emit('reel:stopped', { reelIndex: this.reelIndex });
     }
 
@@ -234,13 +230,13 @@ export class Reel {
 
     public destroy(): void {
         const useObjectPooling = configManager.get('performance', 'enableObjectPooling');
-        
+
         if (useObjectPooling) {
             this.symbols.forEach(sprite => spritePool.returnSprite(sprite));
         } else {
             this.symbols.forEach(sprite => sprite.destroy());
         }
-        
+
         this.symbols = [];
         this.container.destroy();
     }

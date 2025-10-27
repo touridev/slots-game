@@ -1,7 +1,3 @@
-/**
- * Simple event system for game components
- */
-
 export type EventCallback<T = any> = (data: T) => void;
 
 export interface GameEventMap {

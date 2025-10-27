@@ -70,7 +70,7 @@ export class AssetLoader {
             }
 
             await this.loadSounds();
-            console.log('All assets loaded successfully! 🎨');
+            console.log('All assets loaded successfully');
         } catch (error) {
             console.error('Error loading assets:', error);
             throw error;
@@ -83,7 +83,6 @@ export class AssetLoader {
                 sound.add(soundFile.split('.')[0], SOUNDS_PATH + soundFile);
             });
             
-            // Debug: Log sound loading (remove in production)
             // console.log('Loaded sounds:', SOUNDS.length);
         } catch (error) {
             console.error('Error loading sounds:', error);

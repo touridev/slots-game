@@ -1,7 +1,3 @@
-/**
- * Tracks game performance metrics
- */
-
 export interface PerformanceMetrics {
     fps: number;
     frameTime: number;
@@ -19,7 +15,7 @@ export class PerformanceMonitor {
         drawCalls: 0,
         textureMemory: 0,
     };
-    
+
     private frameCount = 0;
     private lastTime = 0;
     private fpsHistory: number[] = [];
@@ -37,15 +33,15 @@ export class PerformanceMonitor {
     public update(deltaTime: number, renderer?: any): void {
         this.frameCount++;
         const currentTime = performance.now();
-        
+
         if (currentTime - this.lastTime >= 1000) {
             this.metrics.fps = Math.round((this.frameCount * 1000) / (currentTime - this.lastTime));
             this.fpsHistory.push(this.metrics.fps);
-            
+
             if (this.fpsHistory.length > this.maxHistoryLength) {
                 this.fpsHistory.shift();
             }
-            
+
             this.frameCount = 0;
             this.lastTime = currentTime;
         }

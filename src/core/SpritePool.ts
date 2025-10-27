@@ -1,7 +1,3 @@
-/**
- * Reuses sprite objects to reduce garbage collection
- */
-
 import * as PIXI from 'pixi.js';
 import { AssetLoader } from '../utils/AssetLoader';
 
