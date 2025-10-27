@@ -3,8 +3,10 @@ import 'pixi-spine';
 import { Reel } from './Reel';
 import { sound } from '../utils/sound';
 import { AssetLoader } from '../utils/AssetLoader';
-import { REEL_CONFIG, ANIMATION_CONFIG, WIN_CONFIG } from '../utils/constants';
-import {Spine} from "pixi-spine";
+import { configManager } from '../core/ConfigManager';
+import { eventManager } from '../core/EventManager';
+import { performanceMonitor } from '../core/PerformanceMonitor';
+import { Spine } from 'pixi-spine';
 
 export class SlotMachine {
     public container: PIXI.Container;
@@ -20,26 +22,28 @@ export class SlotMachine {
         this.container = new PIXI.Container();
         this.reels = [];
 
-        // Center the slot machine
-        this.container.x = this.app.screen.width / 2 - ((REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL) / 2);
-        this.container.y = this.app.screen.height / 2 - ((REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1)) / 2);
+        const config = configManager.get('reels');
+        const displayConfig = configManager.get('display');
+
+        this.container.x = displayConfig.width / 2 - ((config.symbolSize * config.symbolsPerReel) / 2);
+        this.container.y = displayConfig.height / 2 - ((config.symbolSize * config.count + config.reelSpacing * (config.count - 1)) / 2);
 
         this.createBackground();
-
         this.createReels();
-
         this.initSpineAnimations();
+        this.setupEventListeners();
     }
 
     private createBackground(): void {
         try {
+            const config = configManager.get('reels');
             const background = new PIXI.Graphics();
             background.beginFill(0x000000, 0.5);
             background.drawRect(
                 -20,
                 -20,
-                REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL + 40,
-                REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1) + 40
+                config.symbolSize * config.symbolsPerReel + 40,
+                config.symbolSize * config.count + config.reelSpacing * (config.count - 1) + 40
             );
             background.endFill();
             this.container.addChild(background);
@@ -49,17 +53,19 @@ export class SlotMachine {
     }
 
     private createReels(): void {
-        // Create each reel
-        for (let i = 0; i < REEL_CONFIG.COUNT; i++) {
-            const reel = new Reel(REEL_CONFIG.SYMBOLS_PER_REEL, REEL_CONFIG.SYMBOL_SIZE);
-            reel.container.y = i * (REEL_CONFIG.SYMBOL_SIZE + REEL_CONFIG.REEL_SPACING);
+        const config = configManager.get('reels');
+        
+        for (let i = 0; i < config.count; i++) {
+            const reel = new Reel(config.symbolsPerReel, config.symbolSize, i);
+            reel.container.y = i * (config.symbolSize + config.reelSpacing);
             this.container.addChild(reel.container);
             this.reels.push(reel);
         }
     }
 
     public update(delta: number): void {
-        // Update each reel
+        performanceMonitor.update(delta, this.app.renderer);
+        
         for (const reel of this.reels) {
             reel.update(delta);
         }
@@ -69,48 +75,40 @@ export class SlotMachine {
         if (this.isSpinning) return;
 
         this.isSpinning = true;
+        const animationConfig = configManager.get('animation');
 
-        // Play spin sound
         sound.play('Reel spin');
 
-        // Disable spin button
         if (this.spinButton) {
             this.spinButton.texture = AssetLoader.getTexture('button_spin_disabled.png');
             this.spinButton.interactive = false;
         }
 
-        // Start reels spinning with staggered delay
         for (let i = 0; i < this.reels.length; i++) {
             setTimeout(() => {
                 this.reels[i].startSpin();
-            }, i * ANIMATION_CONFIG.REEL_SPIN_DELAY);
+            }, i * animationConfig.reelSpinDelay);
         }
 
-        // Stop all reels after a delay
         setTimeout(() => {
             this.stopSpin();
-        }, ANIMATION_CONFIG.SPIN_TOTAL_DURATION + (this.reels.length - 1) * ANIMATION_CONFIG.REEL_SPIN_DELAY);
+        }, animationConfig.spinTotalDuration + (this.reels.length - 1) * animationConfig.reelSpinDelay);
         
-        // TODO: Add haptic feedback for mobile
-        // TODO: Add visual effects for spin start
-        
-        // Track spin for analytics
-        // analytics.trackSpin();
+        eventManager.emit('spin:start', { timestamp: Date.now() });
     }
 
     private stopSpin(): void {
+        const animationConfig = configManager.get('animation');
+        
         for (let i = 0; i < this.reels.length; i++) {
             setTimeout(() => {
                 this.reels[i].stopSpin();
 
-                // If this is the last reel, wait for all animations to complete
                 if (i === this.reels.length - 1) {
-                    // Check if all reels have finished by monitoring their animation state
                     const checkReelsComplete = () => {
                         const allComplete = this.reels.every(reel => reel.isAnimationComplete());
                         
                         if (allComplete) {
-                            // All reels are done, now trigger win check immediately
                             this.checkWin();
                             this.isSpinning = false;
 
@@ -118,32 +116,32 @@ export class SlotMachine {
                                 this.spinButton.texture = AssetLoader.getTexture('button_spin.png');
                                 this.spinButton.interactive = true;
                             }
+                            
+                            eventManager.emit('spin:stop', { timestamp: Date.now() });
                         } else {
-                            // Some reels still animating, check again soon
                             setTimeout(checkReelsComplete, 50);
                         }
                     };
                     
-                    // Start checking after a short delay
                     setTimeout(checkReelsComplete, 100);
                 }
-            }, i * ANIMATION_CONFIG.REEL_STOP_DELAY);
+            }, i * animationConfig.reelStopDelay);
         }
     }
 
     private checkWin(): void {
-        // Simple win check - just for demonstration
-        const randomWin = Math.random() < WIN_CONFIG.WIN_CHANCE;
+        const winConfig = configManager.get('win');
+        const animationConfig = configManager.get('animation');
+        
+        const randomWin = Math.random() < winConfig.winChance;
 
         if (randomWin) {
             sound.play('win');
-            console.log('Winner! 🎉'); // Added emoji for fun
+            console.log('Winner! 🎉');
 
             if (this.winAnimation) {
-                // Play the win animation found in "big-boom-h" spine
                 this.winAnimation.visible = true;
                 
-                // Get available animations and play the first one, or a default if available
                 const animationName = this.winAnimation.state.hasAnimation('animation') 
                     ? 'animation' 
                     : this.getFirstAnimationName(this.winAnimation);
@@ -154,21 +152,16 @@ export class SlotMachine {
                     console.warn('No animations found in win animation spine');
                 }
                 
-                // Hide animation after it finishes
                 setTimeout(() => {
                     this.winAnimation!.visible = false;
-                }, ANIMATION_CONFIG.WIN_ANIMATION_DURATION);
+                }, animationConfig.winAnimationDuration);
             }
             
-            // Track win for analytics
-            // analytics.trackWin();
-        } else {
-            // console.log('Better luck next time!'); // commented out for now
-            // analytics.trackLoss();
+            eventManager.emit('win:detected', { 
+                winType: 'standard', 
+                multiplier: winConfig.bonusMultiplier 
+            });
         }
-        
-        // TODO: Add win streak tracking
-        // TODO: Add different win types
     }
 
     private getFirstAnimationName(spine: Spine): string | null {
@@ -188,12 +181,14 @@ export class SlotMachine {
 
     private initSpineAnimations(): void {
         try {
+            const config = configManager.get('reels');
+            
             const frameSpineData = AssetLoader.getSpine('base-feature-frame.json');
             if (frameSpineData) {
                 this.frameSpine = new Spine(frameSpineData.spineData);
 
-                this.frameSpine.y = (REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1)) / 2;
-                this.frameSpine.x = (REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL) / 2;
+                this.frameSpine.y = (config.symbolSize * config.count + config.reelSpacing * (config.count - 1)) / 2;
+                this.frameSpine.x = (config.symbolSize * config.symbolsPerReel) / 2;
 
                 if (this.frameSpine.state.hasAnimation('idle')) {
                     this.frameSpine.state.setAnimation(0, 'idle', true);
@@ -206,8 +201,8 @@ export class SlotMachine {
             if (winSpineData) {
                 this.winAnimation = new Spine(winSpineData.spineData);
 
-                this.winAnimation.x = (REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.COUNT + REEL_CONFIG.REEL_SPACING * (REEL_CONFIG.COUNT - 1)) / 2;
-                this.winAnimation.y = (REEL_CONFIG.SYMBOL_SIZE * REEL_CONFIG.SYMBOLS_PER_REEL) / 2;
+                this.winAnimation.x = (config.symbolSize * config.count + config.reelSpacing * (config.count - 1)) / 2;
+                this.winAnimation.y = (config.symbolSize * config.symbolsPerReel) / 2;
 
                 this.winAnimation.visible = false;
 
@@ -216,5 +211,25 @@ export class SlotMachine {
         } catch (error) {
             console.error('Error initializing spine animations:', error);
         }
+    }
+
+    private setupEventListeners(): void {
+        eventManager.on('error:occurred', (data) => {
+            console.error('Game error:', data.error, 'Context:', data.context);
+        });
+    }
+
+    public destroy(): void {
+        this.reels.forEach(reel => reel.destroy());
+        this.reels = [];
+        
+        if (this.frameSpine) {
+            this.frameSpine.destroy();
+        }
+        if (this.winAnimation) {
+            this.winAnimation.destroy();
+        }
+        
+        this.container.destroy();
     }
 }

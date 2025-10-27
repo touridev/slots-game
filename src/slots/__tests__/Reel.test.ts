@@ -1,9 +1,30 @@
 import { Reel } from '../Reel';
 import * as PIXI from 'pixi.js';
 import { AssetLoader } from '../../utils/AssetLoader';
+import { configManager } from '../../core/ConfigManager';
 
 // Mock AssetLoader
 jest.mock('../../utils/AssetLoader');
+
+// Mock configManager
+jest.mock('../../core/ConfigManager', () => ({
+    configManager: {
+        get: jest.fn((key: string, subKey?: string) => {
+            const config: any = {
+                reels: {
+                    symbolTextures: ['symbol1.png', 'symbol2.png', 'symbol3.png'],
+                    spinSpeed: 400,
+                    slowdownRate: 0.95,
+                    stopThreshold: 5.0
+                },
+                performance: {
+                    enableObjectPooling: false
+                }
+            };
+            return subKey ? config[key][subKey] : config[key];
+        })
+    }
+}));
 
 describe('Reel', () => {
     beforeEach(() => {
@@ -23,14 +44,14 @@ describe('Reel', () => {
         it('should create a reel with the correct number of symbols', () => {
             const symbolCount = 6;
             const symbolSize = 150;
-            const reel = new Reel(symbolCount, symbolSize);
+            const reel = new Reel(symbolCount, symbolSize, 0);
 
             expect(reel.children.length).toBe(symbolCount);
         });
 
         it('should initialize symbols with correct size', () => {
             const symbolSize = 150;
-            const reel = new Reel(6, symbolSize);
+            const reel = new Reel(6, symbolSize, 0);
 
             // Check first symbol dimensions
             const firstSymbol = reel.children[0] as PIXI.Sprite;
@@ -40,7 +61,7 @@ describe('Reel', () => {
 
         it('should position symbols horizontally', () => {
             const symbolSize = 150;
-            const reel = new Reel(6, symbolSize);
+            const reel = new Reel(6, symbolSize, 0);
 
             for (let i = 0; i < 6; i++) {
                 const symbol = reel.children[i] as PIXI.Sprite;
@@ -51,7 +72,7 @@ describe('Reel', () => {
 
     describe('spinning', () => {
         it('should start spinning when startSpin is called', () => {
-            const reel = new Reel(6, 150);
+            const reel = new Reel(6, 150, 0);
             reel.startSpin();
 
             // Simulate update cycle
@@ -64,7 +85,7 @@ describe('Reel', () => {
         });
 
         it('should stop spinning when stopSpin is called', () => {
-            const reel = new Reel(6, 150);
+            const reel = new Reel(6, 150, 0);
             reel.startSpin();
 
             // Simulate some spinning
@@ -92,7 +113,7 @@ describe('Reel', () => {
         });
 
         it('should snap to grid when speed becomes very low', () => {
-            const reel = new Reel(6, 150);
+            const reel = new Reel(6, 150, 0);
             reel.startSpin();
 
             // Spin for a bit
@@ -122,7 +143,7 @@ describe('Reel', () => {
 
     describe('update', () => {
         it('should not update when not spinning and speed is 0', () => {
-            const reel = new Reel(6, 150);
+            const reel = new Reel(6, 150, 0);
             const initialX = (reel.container.getChildAt(0) as PIXI.Sprite).x;
 
             // Update should do nothing if not spinning
@@ -132,7 +153,7 @@ describe('Reel', () => {
         });
 
         it('should create symbols with valid textures', () => {
-            const reel = new Reel(6, 150);
+            const reel = new Reel(6, 150, 0);
 
             // Check that getTexture was called multiple times (once per symbol)
             expect(AssetLoader.getTexture).toHaveBeenCalled();
