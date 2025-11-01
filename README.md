@@ -10,7 +10,7 @@ A slots game built with TypeScript, PixiJS, and Webpack. Has horizontal reel spi
 - Responsive design that works on different screen sizes
 - TypeScript for type safety
 - Unit tests with Jest
-
+  
 ## Getting Started
 
 ### Requirements
